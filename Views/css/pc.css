@@ -1,0 +1,77 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Nov 18, 2021, 4:32:09 PM
+    Author     : IAN
+*/
+body
+{
+    background-color: #efefef;
+    font-size: 12px;
+}
+
+.loggedin
+{
+    /*width: 80%;
+    min-width: 80%;
+    max-width: 90%;
+    margin-left: auto;
+    margin-right: auto;*/
+    height:100vh;
+}
+
+
+.upperbar
+{
+    background-color: #0b381b;
+    width:100%;
+    border-top: solid 4px #fecd0b;
+}
+
+.upperbar .bar
+{
+    width: 90%;
+    margin-left: auto;
+    margin-right: auto;
+}
+.upperbar .logo
+{
+    
+}
+
+.loggedin .lowerbar
+{
+    
+}
+.loggedin .lowerbar .left
+{
+    
+}
+.loggedin .lowerbar .left .cont
+{
+    background-color: white;
+}
+
+.loggedin .lowerbar .left .more
+{
+    border-top: solid 1px gray;
+}
+.loggedin .lowerbar .left .more button
+{
+    margin-left: 15px;
+}
+
+
+.loggedin .lowerbar .right
+{
+    margin-right: 15px;
+}
+
+
+.formerror
+{
+    font-size: 11px;
+}
