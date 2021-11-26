@@ -320,7 +320,7 @@ class Taxpayerscontroller {
         }
         else
         {
-            echo 'jkdfjhfjk';
+            header("location:../Taxpayers");
             $this->registry->getObject('template')->getPage()->addTag('formerror', '');
             $this->loadEditForm();
             $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/edit.tpl.php', 'footer.tpl.php');
