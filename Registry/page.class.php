@@ -156,7 +156,7 @@ class page {
      */
     public function getBlock( $tag )
     {
-    	//echo $tag;
+    	//echo $tag."ian";
 		preg_match ('#<!-- START '. $tag . ' -->(.+?)<!-- END '. $tag . ' -->#si', $this->content, $tor);	
 		$tor[0];
 			$tor = str_replace ('<!-- START '. $tag . ' -->', "", $tor[0]);
