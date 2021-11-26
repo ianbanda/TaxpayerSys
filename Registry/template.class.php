@@ -113,56 +113,7 @@ class Template {
         }
     }
 
-    /**
-     * Replace content on the page with data from the database
-     * @param String $tag the tag defining the area of content
-     * @param int $cacheId the queries ID in the query cache
-     * @return void
-     */
-    private function replaceDBTags($tag, $cacheId) {
-        $block = '';
-        $blockOld = $this->page->getBlock($tag);
-        $apd = $this->page->getAdditionalParsingData();
-        $apdkeys = array_keys($apd);
-        // foreach record relating to the query...
-        while ($tags = $this->registry->getObject('db')->resultsFromCache($cacheId)) {
-            $blockNew = $blockOld;
 
-            // Do we have APD tags?
-            if (in_array($tag, $apdkeys)) {
-                // YES we do!
-                foreach ($tags as $ntag => $data) {
-                    $blockNew = str_replace("{" . $ntag . "}", $data, $blockNew);
-                    // Is this tag the one with extra parsing to be done?
-                    if (array_key_exists($ntag, $apd[$tag])) {
-                        // YES it is
-                        $extra = $apd[$tag][$ntag];
-                        // does the tag equal the condition?
-                        if ($data == $extra['condition']) {
-
-                            // Yep! Replace the extratag with the data
-                            $blockNew = str_replace("{" . $extra['tag'] . "}", $extra['data'], $blockNew);
-                        } else {
-                            // remove the extra tag - it aint used!
-                            $blockNew = str_replace("{" . $extra['tag'] . "}", '', $blockNew);
-                        }
-                    }
-                }
-            } else {
-                // create a new block of content with the results replaced into it
-                foreach ($tags as $ntag => $data) {
-                    $blockNew = str_replace("{" . $ntag . "}", $data, $blockNew);
-                }
-            }
-
-            $block .= $blockNew;
-        }
-        $pageContent = $this->page->getContent();
-        // remove the seperator in the template, cleaner HTML
-        $newContent = str_replace('<!-- START ' . $tag . ' -->' . $blockOld . '<!-- END ' . $tag . ' -->', $block, $pageContent);
-        // update the page content
-        $this->page->setContent($newContent);
-    }
 
     /**
      * Replace content on the page with data from the cache
@@ -232,14 +183,6 @@ class Template {
     }
 
     /**
-     * Take the title we set in the page object, and insert them into the view
-     */
-    public function parseTitle() {
-        $newContent = str_replace('<title>', '<title>' . $this->page->getTitle(), $this->page->getContent());
-        $this->page->setContent($newContent);
-    }
-
-    /**
      * Parse the page object into some output
      * @return void
      */
@@ -248,7 +191,6 @@ class Template {
         $this->replaceTags(false);
         $this->replaceBits();
         $this->replaceTags(true);
-        $this->parseTitle();
     }
 
 }

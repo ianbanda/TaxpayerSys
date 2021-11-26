@@ -41,7 +41,7 @@ class Api {
         $result = curl_exec($ch);
         $this->dbResult = $result;
         curl_close($ch);
-        print_r($result);//array printout used during debugging
+        //print_r($result);//array printout used during debugging
 
         //$result = file_get_contents($url);
         $jresult = json_decode($result, true);

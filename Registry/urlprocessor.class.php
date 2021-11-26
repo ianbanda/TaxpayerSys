@@ -66,17 +66,7 @@ class urlprocessor {
         return $array;
     }
 
-    public function buildURL($bits, $qs, $admin) {
-        $admin = ( $admin == 1 ) ? $this->registry->getSetting('admin_folder') . '/' : '';
-        $the_rest = '';
-        foreach ($bits as $bit) {
-            $the_rest .= $bit . '/';
-        }
-        $the_rest = ( $qs != '' ) ? $the_rest . '?&' . $qs : $the_rest;
-
-        return $this->registry->getSetting('siteurl') . $admin . $the_rest;
-    }
-
+    
 }
 
 ?>

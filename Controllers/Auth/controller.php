@@ -10,6 +10,7 @@ class Authcontroller {
 
     private $registry;
     private $loggedin;
+    private $user;
 
     public function __construct($registry, $directCall = true) {
         $this->registry = $registry;
@@ -34,75 +35,29 @@ class Authcontroller {
             $registry->getObject('template')->addTemplateBit('topbar', 'topbar.tpl.php');
             
         }
-        header("Location:../index.php");
+        //header("Location:../index.php");
     }
 
     public function login() {
-        //print_r($_POST);
-        $data = array();
-
-        if (isset($_POST['loginform'])) {
-            $email = $_POST["email"];
-            $password = $_POST["password"];
-
-            $_POST["email"] = $email;
-
-            $loginarray = array("Email" => $email, "Password" => $password);
-
-            $data = array(
-                "Email" => $email,
-                "Password" => $password
-            );
-            $data = json_encode($data);
-
-            $url = BASEURL . "/auth/login";
-            $api = $this->registry->getObject("api");
-            $result = $api->processRequest($url, $data, 'POST');
-
-            if ($result["ResultCode"] === 1) {
-                $_SESSION["loggedin"] = "1";
-                $_SESSION["myemail"] = $email;
-                $this->loggedin = TRUE;
-            } else {
-                $_SESSION["loggedin"] = "";
-                $_SESSION["email"] = "";
-                unset($_SESSION["loggedin"]);
-                unset($_SESSION["myemail"]);
-                $this->loggedin = FALSE;
-            }
-            header("location:../");
-            $result = $api->processRequest($url, $data, 'POST');
+        $this->registry->getObject('auth')->login();
+        
+        if ($this->registry->getObject('auth')->getUser()->loggedin()) {
+            header("location:../index.php");
+        } else {
+            header("location:../index.php?remark=Wrong Email or Password<br/>");
         }
-        $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/new.tpl.php', 'footer.tpl.php');
+        
     }
 
+    public function getUser()
+    {
+    	return $this->user;
+    }
+
+    
     public function logout() {
-        //print_r($_POST);
-        $email = "banda.ian45@gmail.com";
-        $data = array(
-            "Email" => $email,
-        );
-
-
-        $data = json_encode($data);
-
-        $url = BASEURL . "/Auth/logout";
-        $api = $this->registry->getObject("api");
-        $result = $api->processRequest($url, $data, 'POST');
-
-        if ($result["ResultCode"] === 1) {
-
-            $_SESSION["loggedin"] = "";
-            unset($_SESSION["loggedin"]);
-            session_destroy(); 
-            $this->loggedin = FALSE;
-            
-            header("location:../");
-        }
+        $this->registry->getObject('auth')->logout();
     }
 
-    public function loggedin($param) {
-        return $this->loggedin;
-    }
 
 }

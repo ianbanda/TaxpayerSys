@@ -4,6 +4,9 @@ class Taxpayerscontroller {
 
     private $registry;
 
+    /*
+     * Main constructor for class
+     */
     public function __construct($registry, $directCall = true) {
         $this->registry = $registry;
 
@@ -23,7 +26,7 @@ class Taxpayerscontroller {
                         break;
 
                     case 'list':
-                        $this->listTaxpayers();
+                        header("location:../Taxpayers");
                         break;
 
                     default:
@@ -39,17 +42,32 @@ class Taxpayerscontroller {
         }
     }
     
+    /*
+     * Function that gets and displays the Taxpayer list
+     * 
+     * 
+     */
     private function listTaxpayers() {
         $url = BASEURL . "/Taxpayers/getAll";
         $result = $this->registry->getObject('api')->processRequest($url, null, 'GET');
-        //print_r($result);
         
         $taxpayers = $result;
         
         $cache = $this->registry->getObject('template')->cacheData($result);
         $this->registry->getObject('template')->getPage()->addTag('listTaxpayers', array('DATA', $cache));
+        if(isset($_GET['remark'])){
+            $this->registry->getObject('template')->getPage()->addTag('remark', $_GET['remark']);
+        }
+        else{
+            $this->registry->getObject('template')->getPage()->addTag('remark', '');
+        }
     }
 
+    /*
+     * Function that initializes the edit Taxpayer form
+     * 
+     * 
+     */
     private function loadEditForm()
     {
         $fields = array(
@@ -71,10 +89,14 @@ class Taxpayerscontroller {
         }
     }
 
+    /*
+     * Function that initializes the add Taxpayer form
+     * 
+     * 
+     */
     private function loadAddForm()
     {
         $fields = array(
-            "username"=>"email",
             "email"=>"email",
             "tpin"=>"required",
             "tradingName"=>"required",
@@ -93,28 +115,61 @@ class Taxpayerscontroller {
         }
     }
 
+    /*
+     * Function that sends the delete Taxpayer command to the Web service
+     * via the api class
+     * 
+     * 
+     */
     public function deleteTaxpayer() {
-        if (isset($_GET['tpin'])) {
-            $tpin = $_GET['tpin'];
-            $d = array(
-                "TPIN" => "$tpin",
-            );
-            $data = json_encode($d);
-            //print_r($data);
+        if (isset($_GET['response']) && $_GET['response'] == "yes") {
 
-            $api = $this->registry->getObject("api");
-            $url = BASEURL . "/Taxpayers/delete";
-            $result = $api->processRequest($url, $data, 'POST');
-            //print_r($result);
+            if (isset($_GET['tpin'])) {
+                $tpin = $_GET['tpin'];
+                $d = array(
+                    "TPIN" => "$tpin",
+                );
+                $data = json_encode($d);
+                //print_r($data);
+
+                $api = $this->registry->getObject("api");
+                $url = BASEURL . "/Taxpayers/delete";
+                $result = $api->processRequest($url, $data, 'POST');
+                //print_r($result);
+            }
+            header("location:../Taxpayers?remark=Tax payer".$_GET['tpin']." was successfully deleted");
+        } else {
+            if (isset($_GET['tpin'])) {
+                $this->showDeleteConfirmation($_GET['tpin']);
+            }else
+            {
+                header("location:../Taxpayers/list");
+            }
         }
-        header("location:../index.php");
+    }
+    
+    /*
+     * Function that calls the templates to display the delete Taxpayer prompt
+     * 
+     * 
+     */
+    public function showDeleteConfirmation($tpin) {
+        $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/delconfirm.tpl.php', 'footer.tpl.php');
+        $this->registry->getObject('template')->getPage()->addTag('tpin', $tpin);
+        
     }
 
+    /*
+     * Function that validates the submitted Taxpayer creation fields and connects
+     * with the webservice via the api class
+     * 
+     * 
+     */
     public function addTaxpayer() {
         //print_r($_POST);
+        $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/new.tpl.php', 'footer.tpl.php');
         $data = array();
         $fields = array(
-            "username"=>"email",
             "email"=>"email",
             "tpin"=>"required",
             "tradingName"=>"required",
@@ -146,27 +201,33 @@ class Taxpayerscontroller {
                 $phylocation = $_POST['phyLocation'];
                 $mobnumber = $_POST['mobileNumber'];
 
-                $d = array(
-                    "TPIN" => "$tpin",
-                    "BusinessCertificateNumber" => "$certnum",
-                    "TradingName" => "$tradingname",
-                    "BusinessRegistrationDate" => "$busregdate",
-                    "MobileNumber" => "$mobnumber",
-                    "Email" => "$email",
-                    "PhysicalLocation" => "$phylocation",
-                    "Username" => "banda.ian45@gmail.com",
-                    "Deleted" => false
-                );
-                $data = json_encode($d);
-
-                $api = $this->registry->getObject("api");
-                $url = BASEURL . "/Taxpayers/add";
-                $customresult = $api->processRequest($url, $data, 'POST');
-                //print_r($result);
                 
-                $dbresult = json_decode($api->getDBResult(),true);
-                //print_r($dbresult);
-                $this->registry->getObject('template')->getPage()->addTag('formerror', $dbresult['Remark']);
+                require_once 'Models/Taxpayer.php';
+                $tp = new Taxpayer($this->registry,$tpin);
+                $tp->setBusCertNumber($certnum);
+                $tp->setPhyLocation($phylocation);
+                $tp->setMobileNumber($mobnumber);
+                $tp->setBusRegDate($busregdate);
+                $tp->setTradingName($tradingname);
+                $tp->setTpin($tpin);
+                $tp->setEmail($email);
+                $tp->setUsername($this->registry->getObject('auth')->getUser()->getEmail());
+                //echo("Email is ".$this->registry->getObject('auth')->getUser()->getEmail());
+                
+                
+                
+                $tp->save("new");
+
+                $apiresult = $tp->getAPIResults();
+                
+                //print_r($apiresult);
+                if(isset($apiresult['Remark'])){
+                    $this->registry->getObject('template')->getPage()->addTag('formerror', $apiresult['Remark']);
+                }
+                else{
+                    $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/creationsuccess.tpl.php', 'footer.tpl.php');
+                    $this->registry->getObject('template')->getPage()->addTag('formerror', 'Taxpayer was successfully created');
+                }
             }
             else
             {
@@ -175,12 +236,20 @@ class Taxpayerscontroller {
         }
         else
         {
+            
             $this->loadAddForm();
         }
-        $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/new.tpl.php', 'footer.tpl.php');
+        //$this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/new.tpl.php', 'footer.tpl.php');
     }
 
+    /*
+     * Function that validates the submitted Taxpayer edit fields and connects
+     * with the webservice via the api class
+     * 
+     * 
+     */
     public function editTaxpayer() {
+        $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/edit.tpl.php', 'footer.tpl.php');
         $data = array();
         $fields = array(
             "editUsername"=>"required",
@@ -201,6 +270,8 @@ class Taxpayerscontroller {
                 $validated = $value;
                 break;
             }
+            
+            $tpin = "";
 
             if ($validated=="YES") {
                 $email = $_POST['editEmail'];
@@ -210,43 +281,51 @@ class Taxpayerscontroller {
                 $certnum = $_POST['editBusinessCertificateNumber'];
                 $phylocation = $_POST['editPhysicalLocation'];
                 $mobnumber = $_POST['editMobileNumber'];
+                
+                require_once 'Models/Taxpayer.php';
+                $tp = new Taxpayer($this->registry,$tpin);
+                $tp->setBusCertNumber($certnum);
+                $tp->setPhyLocation($phylocation);
+                $tp->setMobileNumber($mobnumber);
+                $tp->setBusRegDate($busregdate);
+                $tp->setTradingName($tradingname);
+                $tp->setTpin($tpin);
+                $tp->setEmail($email);
+                $tp->setUsername($this->registry->getObject('auth')->getUser()->getEmail());
+                //echo("Email is ".$this->registry->getObject('auth')->getUser()->getEmail());
+                
+                if (isset($_POST['editTPForm'])) {
 
-                $d = array(
-                    "TPIN" => "$tpin",
-                    "BusinessCertificateNumber" => "$certnum",
-                    "TradingName" => "$tradingname",
-                    "BusinessRegistrationDate" => "$busregdate",
-                    "MobileNumber" => "$mobnumber",
-                    "Email" => "$email",
-                    "PhysicalLocation" => "$phylocation",
-                    "Username" => "banda.ian45@gmail.com",
-                    "Deleted" => false
-                );
-                $data = json_encode($d);
+                    $tp->save("edit");
 
-                $api = $this->registry->getObject("api");
-                $url = BASEURL . "/Taxpayers/edit";
-                $result = $api->processRequest($url, $data, 'POST');
-                //print_r($result);
-                $dbresult = json_decode($api->getDBResult(),true);
-                //print_r($dbresult);
-                if(isset($dbresult['Remark'])){
-                    $this->registry->getObject('template')->getPage()->addTag('formerror', $dbresult['Remark']);
-                } else {
+                    $apiresult = $tp->getAPIResults();
+                    //print_r($dbresult);
+                    if (isset($apiresult['Remark'])) {
+                        $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/edit.tpl.php', 'footer.tpl.php');
+                        $this->registry->getObject('template')->getPage()->addTag('formerror', $apiresult['Remark']);
+                    } else {
+                        $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/editsuccess.tpl.php', 'footer.tpl.php');
+                        $this->registry->getObject('template')->getPage()->addTag('tpin', $tpin);
+                    }
+                }else
+                {
                     $this->registry->getObject('template')->getPage()->addTag('formerror', '');
                 }
-                
-            } else {
+                $this->registry->getObject('template')->getPage()->addTag('tpin', $tpin);
+            } 
+            else {
                 //echo 'the form had errors';
                 $this->registry->getObject('template')->getPage()->addTag('formerror', 'There were errors with the form');
             }
         }
         else
         {
+            echo 'jkdfjhfjk';
             $this->registry->getObject('template')->getPage()->addTag('formerror', '');
             $this->loadEditForm();
+            $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/edit.tpl.php', 'footer.tpl.php');
         }
-        $this->registry->getObject('template')->buildFromTemplates('header.tpl.php', 'Taxpayers/edit.tpl.php', 'footer.tpl.php');
+        
     }
 
 }
