@@ -67,6 +67,10 @@ if (in_array($controller, $controllers)) {
             $registry->getObject('template')->addTemplateBit('topbar', 'topbar.tpl.php');
         }
     }
+    else
+    {
+        $registry->getObject('template')->buildFromTemplates('header.tpl.php', 'pagenotfound.tpl.php', 'footer.tpl.php');
+    }
 }
 /* * *****************************************************************************
  *
