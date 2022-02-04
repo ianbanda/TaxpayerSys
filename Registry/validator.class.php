@@ -99,9 +99,9 @@ class Validator {
      */
     public function sanitizeData($value) {
         // Stripslashes 
-        if (get_magic_quotes_gpc()) {
+        //if (get_magic_quotes_gpc()) {
             $value = stripslashes($value);
-        }
+        //}
 
 
         return $value;
