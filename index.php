@@ -22,7 +22,7 @@ $registry->getObject('url')->getURLData();
 
 $controller = $registry->getObject('url')->getURLBit(0);
 
-
+$registry->storeSetting('','siteurl');
 $registry->getObject('template')->getPage()->addTag('siteurl', $registry->getSetting('siteurl'));
 
 $registry->getObject('template')->buildFromTemplates('header.tpl.php', 'main.tpl.php', 'footer.tpl.php');
